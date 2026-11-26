@@ -44,12 +44,9 @@ private enum class GamePlace(val label: String, val icon: String, val descriptio
 }
 
 private data class Person(val name: String, val role: String, val hair: Color, val clothes: Color, val note: String)
-private val people = listOf(
-    Person("Alex", "Tú", Color(0xFF493344), Color(0xFF8198B9), "Un chico que despierta sin recordar su vida."),
-    Person("Elena", "Mamá", Color(0xFF79513F), Color(0xFF91A9B5), "Cariñosa, observadora y difícil de engañar."),
-    Person("Lucía", "Hermana", Color(0xFF3C293C), Color(0xFFE7A5BD), "Sarcástica, curiosa y más lista de lo que aparenta."),
-    Person("Maya", "Compañera", Color(0xFF874D49), Color(0xFFDDA3C0), "Parece saber algo sobre Alex, pero no lo cuenta.")
-)
+private val people = Cast.members.map { member ->
+    Person(member.displayName, member.role, Color(member.hair), Color(member.outfit), member.personality)
+}
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
