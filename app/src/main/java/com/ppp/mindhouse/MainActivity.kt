@@ -71,12 +71,12 @@ private fun MindHouseGame(context: Context) {
     var speaker by remember { mutableStateOf("NARRACIÓN") }
     var clueCount by remember { mutableIntStateOf(save.getInt("clues", 0)) }
     var trust by remember { mutableIntStateOf(save.getInt("trust", 0)) }
-    var explored by remember { mutableStateOf(save.getStringSet("explored", emptySet())?.toMutableSet() ?: mutableSetOf()) }
-    var inventory by remember { mutableStateOf(save.getStringSet("inventory", setOf("Teléfono bloqueado"))?.toMutableSet() ?: mutableSetOf("Teléfono bloqueado")) }
-    var journal by remember { mutableStateOf(save.getStringSet("journal", setOf("No recuerdas quién eres."))?.toMutableSet() ?: mutableSetOf("No recuerdas quién eres.")) }
-    fun addClue(label: String) { if (journal.add(label)) { clueCount += 1; journal = journal.toMutableSet() } }
-    fun addJournal(label: String) { journal = journal.toMutableSet().apply { add(label) } }
-    fun addItem(label: String) { inventory = inventory.toMutableSet().apply { add(label) } }
+    var explored by remember { mutableStateOf<Set<String>>(save.getStringSet("explored", emptySet()) ?: emptySet()) }
+    var inventory by remember { mutableStateOf<Set<String>>(save.getStringSet("inventory", setOf("Teléfono bloqueado")) ?: setOf("Teléfono bloqueado")) }
+    var journal by remember { mutableStateOf<Set<String>>(save.getStringSet("journal", setOf("No recuerdas quién eres.")) ?: setOf("No recuerdas quién eres.")) }
+    fun addClue(label: String) { if (label !in journal) { clueCount += 1; journal = journal + label } }
+    fun addJournal(label: String) { journal = journal + label }
+    fun addItem(label: String) { inventory = inventory + label }
 
     LaunchedEffect(day, hour, outfit, energy, coins, clueCount, trust, explored.hashCode(), inventory.hashCode(), journal.hashCode()) {
         save.edit().putInt("day", day).putInt("hour", hour).putInt("outfit", outfit)
@@ -118,7 +118,7 @@ private fun MindHouseGame(context: Context) {
                             "snack" -> { if (coins >= 3) { coins -= 3; energy = (energy + 1).coerceAtMost(5); dialogue = "Compras un dulce. Está buenísimo. Recuperas un poco de energía." } else dialogue = "No tienes suficientes monedas." }
                             else -> { speaker = "NARRACIÓN"; dialogue = "Miras alrededor con atención. No tienes que apresurarte: puedes volver cuando quieras."; }
                         }
-                        explored = explored.toMutableSet().apply { add(place.name + ":" + action) }
+                        explored = explored + (place.name + ":" + action)
                     },
                     onTime = { if (energy > 0) { hour = if (hour >= 21) { day += 1; 7 } else hour + 1; energy -= 1 } else dialogue = "Estás agotado. Descansa antes de seguir." },
                     onWardrobe = { page = "wardrobe" },
