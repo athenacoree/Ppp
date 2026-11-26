@@ -78,7 +78,7 @@ private fun MindHouseGame(context: Context) {
     fun addJournal(label: String) { journal = journal.toMutableSet().apply { add(label) } }
     fun addItem(label: String) { inventory = inventory.toMutableSet().apply { add(label) } }
 
-    LaunchedEffect(day, hour, outfit, energy, coins, clueCount, trust, explored.size, inventory.size, journal.size) {
+    LaunchedEffect(day, hour, outfit, energy, coins, clueCount, trust, explored.hashCode(), inventory.hashCode(), journal.hashCode()) {
         save.edit().putInt("day", day).putInt("hour", hour).putInt("outfit", outfit)
             .putInt("energy", energy).putInt("coins", coins).putInt("clues", clueCount)
             .putInt("trust", trust).putStringSet("explored", explored.toSet())
