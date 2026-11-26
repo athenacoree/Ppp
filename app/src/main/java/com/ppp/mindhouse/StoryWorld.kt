@@ -21,7 +21,11 @@ object Cast {
         CastMember("alex", "Alex", "Protagonista", 0xFF302A35, 0xFFFFD9C8, 0xFF697F9C, "Desorientado, observador; intenta actuar con normalidad."),
         CastMember("elena", "Elena", "Madre", 0xFF76513E, 0xFFEFC7AD, 0xFF8A9DAB, "Cariñosa, práctica y muy perceptiva."),
         CastMember("lucia", "Lucía", "Hermana", 0xFF3B2938, 0xFFFFD9C8, 0xFFCB91A8, "Sarcástica, ingeniosa y protectora."),
-        CastMember("maya", "Maya", "Compañera", 0xFF6A4037, 0xFFF0C8B7, 0xFFE3A0B6, "Reservada; parece reconocer detalles que Alex no recuerda.")
+        CastMember("maya", "Maya", "Compañera", 0xFF6A4037, 0xFFF0C8B7, 0xFFE3A0B6, "Reservada; parece reconocer detalles que Alex no recuerda."),
+        CastMember("noah", "Noah", "Compañero", 0xFF4A342D, 0xFFE8BFA8, 0xFF7897B8, "Amable, bromista y aficionado a la fotografía."),
+        CastMember("sora", "Sora", "Compañera", 0xFF332A43, 0xFFF4D1BE, 0xFF9B91C8, "Creativa, dulce y muy observadora."),
+        CastMember("iris", "Iris", "Bibliotecaria", 0xFF8B624D, 0xFFEBC6AE, 0xFF8FA99B, "Tranquila; conoce los archivos antiguos del instituto."),
+        CastMember("vera", "Vera", "Profesora", 0xFF5A3E45, 0xFFECC5B0, 0xFFB68CA8, "Exigente pero justa; recuerda al Alex de antes.")
     )
 }
 
