@@ -9,6 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -318,7 +319,7 @@ private fun PlaceButton(place: GamePlace, selected: Boolean, modifier: Modifier 
 
 @Composable
 private fun SmallAction(label: String, icon: String, onClick: () -> Unit) {
-    Column(Modifier.weight(1f).background(Color(0xFF51465F), RoundedCornerShape(10.dp)).clickable { onClick() }.padding(vertical = 7.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(Modifier.width(76.dp).background(Color(0xFF51465F), RoundedCornerShape(10.dp)).clickable { onClick() }.padding(vertical = 7.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Text(icon, fontSize = 15.sp); Text(label, color = Cream, fontSize = 9.sp, textAlign = TextAlign.Center)
     }
 }
