@@ -76,6 +76,9 @@ private fun MindHouseGame(context: Context) {
     var explored by remember { mutableStateOf(save.getStringSet("explored", emptySet())?.toMutableSet() ?: mutableSetOf()) }
     var inventory by remember { mutableStateOf(save.getStringSet("inventory", setOf("Teléfono bloqueado"))?.toMutableSet() ?: mutableSetOf("Teléfono bloqueado")) }
     var journal by remember { mutableStateOf(save.getStringSet("journal", setOf("No recuerdas quién eres."))?.toMutableSet() ?: mutableSetOf("No recuerdas quién eres.")) }
+    fun addClue(label: String) { if (journal.add(label)) { clueCount += 1; journal = journal.toMutableSet() } }
+    fun addJournal(label: String) { journal = journal.toMutableSet().apply { add(label) } }
+    fun addItem(label: String) { inventory = inventory.toMutableSet().apply { add(label) } }
 
     LaunchedEffect(day, hour, outfit, energy, coins, clueCount, trust, explored.size, inventory.size, journal.size) {
         save.edit().putInt("day", day).putInt("hour", hour).putInt("outfit", outfit)
@@ -98,18 +101,18 @@ private fun MindHouseGame(context: Context) {
                     explored = explored, onMove = { place = it; speaker = "NARRACIÓN"; dialogue = it.description; },
                     onAction = { action ->
                         when (action) {
-                            "mirror" -> { speaker = "ALEX"; dialogue = "Te miras fijamente. Ese rostro no es el tuyo. «Diablo... pero qué cambio». Te cubres con una toalla y respiras hondo."; addClue("El rostro del espejo"); inventory.add("Foto familiar") }
+                            "mirror" -> { speaker = "ALEX"; dialogue = "Te miras fijamente. Ese rostro no es el tuyo. «Diablo... pero qué cambio». Te cubres con una toalla y respiras hondo."; addClue("El rostro del espejo"); addItem("Foto familiar") }
                             "photo" -> { speaker = "NARRACIÓN"; dialogue = "En la foto aparecen Elena, Lucía y Alex. Detrás hay una fecha escrita: hace tres meses."; addClue("Foto familiar con una fecha"); inventory.add("Foto familiar") }
-                            "phone" -> { speaker = "NARRACIÓN"; dialogue = "El teléfono pide un patrón. En la pantalla bloqueada hay varios mensajes sin leer y una notificación: «No vuelvas a ese lugar»."; addClue("Mensaje: No vuelvas a ese lugar"); inventory.add("Teléfono bloqueado") }
-                            "mom" -> { speaker = "ELENA"; dialogue = "Cariño, tienes mala cara. ¿Te encuentras bien? Si necesitas quedarte en casa, dímelo."; trust += 1; journal.add("Elena se preocupa por ti.") }
-                            "sister" -> { speaker = "LUCÍA"; dialogue = "¿Qué te pasa hoy? Estás rarísimo. Si quieres hablar, estoy en mi cuarto... pero no toques mis cosas."; trust += 1; journal.add("Lucía nota que algo ha cambiado.") }
+                            "phone" -> { speaker = "NARRACIÓN"; dialogue = "El teléfono pide un patrón. En la pantalla bloqueada hay varios mensajes sin leer y una notificación: «No vuelvas a ese lugar»."; addClue("Mensaje: No vuelvas a ese lugar"); addItem("Teléfono bloqueado") }
+                            "mom" -> { speaker = "ELENA"; dialogue = "Cariño, tienes mala cara. ¿Te encuentras bien? Si necesitas quedarte en casa, dímelo."; trust += 1; addJournal("Elena se preocupa por ti.") }
+                            "sister" -> { speaker = "LUCÍA"; dialogue = "¿Qué te pasa hoy? Estás rarísimo. Si quieres hablar, estoy en mi cuarto... pero no toques mis cosas."; trust += 1; addJournal("Lucía nota que algo ha cambiado.") }
                             "maya" -> { speaker = "MAYA"; dialogue = "No esperaba verte aquí, Alex. Si de verdad no recuerdas nada, busca la libreta azul. Y no confíes en la primera versión que te cuenten."; addClue("Maya menciona una libreta azul"); trust += 1 }
-                            "class" -> { speaker = "PROFESORA"; dialogue = "Llegas justo a tiempo. Puedes sentarte, revisar el tablón o hablar con tus compañeros. No todo en el instituto gira alrededor de las clases."; journal.add("El instituto ofrece nuevas pistas y amistades.") }
+                            "class" -> { speaker = "PROFESORA"; dialogue = "Llegas justo a tiempo. Puedes sentarte, revisar el tablón o hablar con tus compañeros. No todo en el instituto gira alrededor de las clases."; addJournal("El instituto ofrece nuevas pistas y amistades.") }
                             "rest" -> { energy = (energy + 2).coerceAtMost(5); speaker = "NARRACIÓN"; dialogue = "Te tomas un descanso. Recuperas energía y observas el lugar con más calma." }
                             "snack" -> { if (coins >= 3) { coins -= 3; energy = (energy + 1).coerceAtMost(5); dialogue = "Compras un dulce. Está buenísimo. Recuperas un poco de energía." } else dialogue = "No tienes suficientes monedas." }
                             else -> { speaker = "NARRACIÓN"; dialogue = "Miras alrededor con atención. No tienes que apresurarte: puedes volver cuando quieras."; }
                         }
-                        explored.add(place.name + ":" + action)
+                        explored = explored.toMutableSet().apply { add(place.name + ":" + action) }
                     },
                     onTime = { if (energy > 0) { hour = if (hour >= 21) { day += 1; 7 } else hour + 1; energy -= 1 } else dialogue = "Estás agotado. Descansa antes de seguir." },
                     onWardrobe = { page = "wardrobe" },
@@ -121,9 +124,6 @@ private fun MindHouseGame(context: Context) {
         }
     }
 
-    fun addClueLocal(label: String) {
-        if (journal.add(label)) clueCount += 1
-    }
 }
 
 @Composable
