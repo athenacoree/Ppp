@@ -81,6 +81,9 @@ private fun MindHouseGame(context: Context) {
         "sora" to save.getInt("rel_sora", 0), "iris" to save.getInt("rel_iris", 0),
         "vera" to save.getInt("rel_vera", 0)
     )) }
+    var explored by remember { mutableStateOf<Set<String>>(save.getStringSet("explored", emptySet()) ?: emptySet()) }
+    var inventory by remember { mutableStateOf<Set<String>>(save.getStringSet("inventory", setOf("Teléfono bloqueado")) ?: setOf("Teléfono bloqueado")) }
+    var journal by remember { mutableStateOf<Set<String>>(save.getStringSet("journal", setOf("No recuerdas quién eres.")) ?: setOf("No recuerdas quién eres.")) }
     fun buildRelationship(id: String, action: String) {
         val key = "relationship:$id:$action"
         if (key !in explored) {
@@ -89,14 +92,11 @@ private fun MindHouseGame(context: Context) {
             explored = explored + key
         }
     }
-    var explored by remember { mutableStateOf<Set<String>>(save.getStringSet("explored", emptySet()) ?: emptySet()) }
-    var inventory by remember { mutableStateOf<Set<String>>(save.getStringSet("inventory", setOf("Teléfono bloqueado")) ?: setOf("Teléfono bloqueado")) }
-    var journal by remember { mutableStateOf<Set<String>>(save.getStringSet("journal", setOf("No recuerdas quién eres.")) ?: setOf("No recuerdas quién eres.")) }
     fun addClue(label: String) { if (label !in journal) { clueCount += 1; journal = journal + label } }
     fun addJournal(label: String) { journal = journal + label }
     fun addItem(label: String) { inventory = inventory + label }
 
-    LaunchedEffect(day, hour, outfit, energy, coins, clueCount, trust, explored.hashCode(), inventory.hashCode(), journal.hashCode()) {
+    LaunchedEffect(day, hour, outfit, energy, coins, clueCount, trust, relationships.hashCode(), explored.hashCode(), inventory.hashCode(), journal.hashCode()) {
         save.edit().putInt("day", day).putInt("hour", hour).putInt("outfit", outfit)
             .putInt("energy", energy).putInt("coins", coins).putInt("clues", clueCount)
             .putInt("trust", trust).putInt("rel_elena", relationships["elena"] ?: 0)
