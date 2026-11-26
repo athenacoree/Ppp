@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -64,6 +65,7 @@ private fun MindHouseGame(context: Context) {
     val save = remember { context.getSharedPreferences("quiet_room_save", Context.MODE_PRIVATE) }
     var page by remember { mutableStateOf("home") }
     var place by remember { mutableStateOf(GamePlace.BEDROOM) }
+    var playerX by remember { mutableStateOf(0.5f) }
     var day by remember { mutableIntStateOf(save.getInt("day", 1)) }
     var hour by remember { mutableIntStateOf(save.getInt("hour", 7)) }
     var outfit by remember { mutableIntStateOf(save.getInt("outfit", 0)) }
@@ -98,7 +100,7 @@ private fun MindHouseGame(context: Context) {
                 else -> WorldScreen(
                     place = place, day = day, hour = hour, outfit = outfit, energy = energy,
                     coins = coins, clueCount = clueCount, speaker = speaker, dialogue = dialogue,
-                    explored = explored, onMove = { place = it; speaker = "NARRACIÓN"; dialogue = it.description; },
+                    explored = explored, playerX = playerX, onPlayerMove = { playerX = (playerX + it).coerceIn(0.18f, 0.82f) }, onMove = { place = it; playerX = 0.5f; speaker = "NARRACIÓN"; dialogue = it.description; },
                     onAction = { action ->
                         when (action) {
                             "mirror" -> { speaker = "ALEX"; dialogue = "Te miras fijamente. Ese rostro no es el tuyo. «Diablo... pero qué cambio». Te cubres con una toalla y respiras hondo."; addClue("El rostro del espejo"); addItem("Foto familiar") }
@@ -153,7 +155,7 @@ private fun HomeScreen(onPlay: () -> Unit, onWardrobe: () -> Unit) {
 @Composable
 private fun WorldScreen(
     place: GamePlace, day: Int, hour: Int, outfit: Int, energy: Int, coins: Int, clueCount: Int,
-    speaker: String, dialogue: String, explored: Set<String>, onMove: (GamePlace) -> Unit,
+    speaker: String, dialogue: String, explored: Set<String>, playerX: Float, onPlayerMove: (Float) -> Unit, onMove: (GamePlace) -> Unit,
     onAction: (String) -> Unit, onTime: () -> Unit, onWardrobe: () -> Unit,
     onJournal: () -> Unit, onBag: () -> Unit, onPeople: () -> Unit
 ) {
@@ -163,7 +165,7 @@ private fun WorldScreen(
             Text("THE QUIET ROOM", color = Cream, fontWeight = FontWeight.Black, fontSize = 13.sp)
         }
         Box(Modifier.fillMaxWidth().weight(1f)) {
-            SceneArt(place, outfit, Modifier.fillMaxSize())
+            SceneArt(place, outfit, playerX, onPlayerMove, Modifier.fillMaxSize())
             Column(Modifier.align(Alignment.TopStart).padding(12.dp).background(Color(0xCCFFFFFF), RoundedCornerShape(12.dp)).padding(10.dp)) {
                 Text(place.icon + "  " + place.label, color = Ink, fontWeight = FontWeight.Bold)
                 Text(place.description, color = Ink, fontSize = 10.sp)
@@ -206,8 +208,9 @@ private fun WorldScreen(
 }
 
 @Composable
-private fun SceneArt(place: GamePlace, outfit: Int, modifier: Modifier = Modifier) {
-    Box(modifier.background(Color(0xFFEADFED))) {
+private fun SceneArt(place: GamePlace, outfit: Int, playerX: Float, onPlayerMove: (Float) -> Unit, modifier: Modifier = Modifier) {
+    BoxWithConstraints(modifier.background(Color(0xFFEADFED))) {
+        val shift = maxWidth * (animateFloatAsState(playerX, label = "avatar-position").value - 0.5f)
         Canvas(Modifier.fillMaxSize()) {
             val w = size.width; val h = size.height
             val wall = when (place) {
@@ -277,7 +280,9 @@ private fun SceneArt(place: GamePlace, outfit: Int, modifier: Modifier = Modifie
                 }
             }
         }
-        CharacterArt(people[0].copy(clothes = outfitColor(outfit)), outfit, Modifier.align(Alignment.BottomCenter).fillMaxWidth(.48f).height(205.dp))
+        CharacterArt(people[0].copy(clothes = outfitColor(outfit)), outfit, Modifier.align(Alignment.BottomCenter).offset(x = shift).fillMaxWidth(.48f).height(205.dp))
+        Text("◀", Modifier.align(Alignment.BottomStart).padding(12.dp).background(Color(0xCCFFFFFF), CircleShape).clickable { onPlayerMove(-0.12f) }.padding(horizontal = 15.dp, vertical = 9.dp), color = Ink, fontSize = 20.sp, fontWeight = FontWeight.Black)
+        Text("▶", Modifier.align(Alignment.BottomEnd).padding(12.dp).background(Color(0xCCFFFFFF), CircleShape).clickable { onPlayerMove(0.12f) }.padding(horizontal = 15.dp, vertical = 9.dp), color = Ink, fontSize = 20.sp, fontWeight = FontWeight.Black)
     }
 }
 
