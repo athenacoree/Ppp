@@ -243,23 +243,50 @@ private fun SceneArt(place: GamePlace, outfit: Int, modifier: Modifier = Modifie
 @Composable
 private fun CharacterArt(person: Person, outfit: Int, modifier: Modifier = Modifier) {
     Canvas(modifier) {
-        val cx = size.width / 2f; val cy = size.height * .40f
-        val head = size.width * .25f
-        drawOval(Color(0x22342D46), Offset(cx - head * 1.2f, size.height * .82f), Size(head * 2.4f, size.height * .12f))
-        drawRoundRect(person.clothes, Offset(cx - head * 1.05f, cy + head * .72f), Size(head * 2.1f, size.height * .48f), androidx.compose.ui.geometry.CornerRadius(head * .55f))
-        drawCircle(person.hair, head * 1.03f, Offset(cx, cy - head * .10f))
-        drawCircle(person.skin, head * .83f, Offset(cx, cy))
-        drawArc(person.hair, 180f, 180f, false, Offset(cx - head * .84f, cy - head * .76f), Size(head * 1.68f, head * 1.05f))
-        drawCircle(person.hair, head * .23f, Offset(cx - head * .72f, cy + head * .18f))
-        drawCircle(person.hair, head * .23f, Offset(cx + head * .72f, cy + head * .18f))
-        val eyeY = cy + head * .10f
-        drawCircle(Ink, head * .075f, Offset(cx - head * .30f, eyeY))
-        drawCircle(Ink, head * .075f, Offset(cx + head * .30f, eyeY))
-        drawCircle(Color(0xFFFFA9B9), head * .11f, Offset(cx - head * .48f, cy + head * .31f))
-        drawCircle(Color(0xFFFFA9B9), head * .11f, Offset(cx + head * .48f, cy + head * .31f))
-        drawLine(Color(0xFFB86E7C), Offset(cx - head * .10f, cy + head * .42f), Offset(cx + head * .10f, cy + head * .42f), 2f)
-        drawCircle(Color.White, head * .035f, Offset(cx - head * .32f, eyeY - head * .03f))
-        drawCircle(Color.White, head * .035f, Offset(cx + head * .28f, eyeY - head * .03f))
+        val cx = size.width / 2f
+        val cy = size.height * .39f
+        val head = size.width * .235f
+        val face = person.skin
+        val hair = person.hair
+        val bodyTop = cy + head * .72f
+
+        // Soft shadow and rounded shoulders
+        drawOval(Color(0x22342D46), Offset(cx - head * 1.5f, size.height * .84f), Size(head * 3f, size.height * .10f))
+        drawRoundRect(person.clothes, Offset(cx - head * 1.18f, bodyTop), Size(head * 2.36f, size.height * .49f), androidx.compose.ui.geometry.CornerRadius(head * .62f))
+        drawRoundRect(Color(0x22FFFFFF), Offset(cx - head * .94f, bodyTop + head * .12f), Size(head * .42f, size.height * .29f), androidx.compose.ui.geometry.CornerRadius(head * .22f))
+        drawRoundRect(face, Offset(cx - head * .22f, cy + head * .58f), Size(head * .44f, head * .42f), androidx.compose.ui.geometry.CornerRadius(head * .12f))
+
+        // Hair silhouette, ears and face
+        drawCircle(hair, head * 1.08f, Offset(cx, cy - head * .08f))
+        drawCircle(face, head * .82f, Offset(cx, cy + head * .03f))
+        drawCircle(face, head * .16f, Offset(cx - head * .76f, cy + head * .12f))
+        drawCircle(face, head * .16f, Offset(cx + head * .76f, cy + head * .12f))
+        drawArc(hair, 180f, 180f, false, Offset(cx - head * .86f, cy - head * .82f), Size(head * 1.72f, head * 1.13f))
+        // Distinct fringe and side locks make silhouettes less generic.
+        drawOval(hair, Offset(cx - head * .72f, cy - head * .47f), Size(head * .55f, head * .76f))
+        drawOval(hair, Offset(cx + head * .18f, cy - head * .48f), Size(head * .55f, head * .72f))
+        drawOval(hair, Offset(cx - head * 1.00f, cy - head * .05f), Size(head * .30f, head * .90f))
+        drawOval(hair, Offset(cx + head * .70f, cy - head * .02f), Size(head * .30f, head * .88f))
+
+        // Large glossy eyes, lashes, blush and tiny smile
+        val eyeY = cy + head * .13f
+        drawLine(hair, Offset(cx - head * .47f, eyeY - head * .12f), Offset(cx - head * .20f, eyeY - head * .16f), head * .055f)
+        drawLine(hair, Offset(cx + head * .20f, eyeY - head * .16f), Offset(cx + head * .47f, eyeY - head * .12f), head * .055f)
+        drawOval(Color(0xFF49364B), Offset(cx - head * .39f, eyeY - head * .10f), Size(head * .19f, head * .30f))
+        drawOval(Color(0xFF49364B), Offset(cx + head * .20f, eyeY - head * .10f), Size(head * .19f, head * .30f))
+        drawCircle(Color.White, head * .055f, Offset(cx - head * .30f, eyeY - head * .02f))
+        drawCircle(Color.White, head * .055f, Offset(cx + head * .29f, eyeY - head * .02f))
+        drawCircle(Color(0xFFFFA8B9), head * .12f, Offset(cx - head * .52f, cy + head * .34f))
+        drawCircle(Color(0xFFFFA8B9), head * .12f, Offset(cx + head * .52f, cy + head * .34f))
+        drawArc(Color(0xFFB86E7C), 10f, 160f, false, Offset(cx - head * .13f, cy + head * .34f), Size(head * .26f, head * .19f), style = Stroke(head * .035f))
+
+        // Small signature accessories for the girls.
+        if (person.name == "Lucía" || person.name == "Maya" || person.name == "Sora") {
+            val bowColor = if (person.name == "Maya") Pink else Lilac
+            drawCircle(bowColor, head * .19f, Offset(cx + head * .78f, cy - head * .55f))
+            drawCircle(bowColor, head * .19f, Offset(cx + head * 1.02f, cy - head * .55f))
+            drawCircle(Color(0xFFFFF8F3), head * .07f, Offset(cx + head * .90f, cy - head * .55f))
+        }
     }
 }
 
