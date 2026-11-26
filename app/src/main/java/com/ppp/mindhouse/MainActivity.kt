@@ -43,9 +43,9 @@ private enum class GamePlace(val label: String, val icon: String, val descriptio
     PARK("Parque", "🦋", "Un sitio para descansar y conocer gente.")
 }
 
-private data class Person(val name: String, val role: String, val hair: Color, val clothes: Color, val note: String)
+private data class Person(val name: String, val role: String, val hair: Color, val skin: Color, val clothes: Color, val note: String)
 private val people = Cast.members.map { member ->
-    Person(member.displayName, member.role, Color(member.hair), Color(member.outfit), member.personality)
+    Person(member.displayName, member.role, Color(member.hair), Color(member.skin), Color(member.outfit), member.personality)
 }
 
 class MainActivity : ComponentActivity() {
@@ -100,12 +100,20 @@ private fun MindHouseGame(context: Context) {
                     onAction = { action ->
                         when (action) {
                             "mirror" -> { speaker = "ALEX"; dialogue = "Te miras fijamente. Ese rostro no es el tuyo. «Diablo... pero qué cambio». Te cubres con una toalla y respiras hondo."; addClue("El rostro del espejo"); addItem("Foto familiar") }
-                            "photo" -> { speaker = "NARRACIÓN"; dialogue = "En la foto aparecen Elena, Lucía y Alex. Detrás hay una fecha escrita: hace tres meses."; addClue("Foto familiar con una fecha"); inventory.add("Foto familiar") }
+                            "photo" -> { speaker = "NARRACIÓN"; dialogue = "En la foto aparecen Elena, Lucía y Alex. Detrás hay una fecha escrita: hace tres meses."; addClue("Foto familiar con una fecha"); addItem("Foto familiar") }
                             "phone" -> { speaker = "NARRACIÓN"; dialogue = "El teléfono pide un patrón. En la pantalla bloqueada hay varios mensajes sin leer y una notificación: «No vuelvas a ese lugar»."; addClue("Mensaje: No vuelvas a ese lugar"); addItem("Teléfono bloqueado") }
                             "mom" -> { speaker = "ELENA"; dialogue = "Cariño, tienes mala cara. ¿Te encuentras bien? Si necesitas quedarte en casa, dímelo."; trust += 1; addJournal("Elena se preocupa por ti.") }
                             "sister" -> { speaker = "LUCÍA"; dialogue = "¿Qué te pasa hoy? Estás rarísimo. Si quieres hablar, estoy en mi cuarto... pero no toques mis cosas."; trust += 1; addJournal("Lucía nota que algo ha cambiado.") }
                             "maya" -> { speaker = "MAYA"; dialogue = "No esperaba verte aquí, Alex. Si de verdad no recuerdas nada, busca la libreta azul. Y no confíes en la primera versión que te cuenten."; addClue("Maya menciona una libreta azul"); trust += 1 }
                             "class" -> { speaker = "PROFESORA"; dialogue = "Llegas justo a tiempo. Puedes sentarte, revisar el tablón o hablar con tus compañeros. No todo en el instituto gira alrededor de las clases."; addJournal("El instituto ofrece nuevas pistas y amistades.") }
+                            "bluebook" -> { speaker = "NARRACIÓN"; dialogue = "Encuentras una libreta azul detrás de unos libros. Hay una página arrancada y una frase: «La habitación 204 no existe en los planos»."; addClue("Libreta azul: habitación 204"); addItem("Libreta azul") }
+                            "sora" -> { speaker = "SORA"; dialogue = "¡Hola! Soy Sora. Si te gustan los dibujos, algún día te enseño mi cuaderno. Aunque... ¿por qué estás mirando tanto esa foto?"; trust += 1; addJournal("Sora quiere enseñarte su cuaderno.") }
+                            "noah" -> { speaker = "NOAH"; dialogue = "¿Te gusta la fotografía? Ayer encontré una foto vieja cerca del gimnasio. Quizá sea tuya."; addClue("Noah encontró una fotografía antigua"); addItem("Pista fotográfica") }
+                            "iris" -> { speaker = "IRIS"; dialogue = "Los archivos antiguos están al fondo. Puedes leerlos, pero algunas cajas llevan años cerradas."; addJournal("Iris puede ayudarte a consultar archivos.") }
+                            "notice" -> { speaker = "NARRACIÓN"; dialogue = "El tablón anuncia el club de arte, el festival escolar y una excursión. Puedes apuntarte cuando quieras."; addJournal("Actividades: club de arte, festival y excursión.") }
+                            "shop" -> { if (coins >= 5) { coins -= 5; addItem("Dulce de fresa"); energy = (energy + 1).coerceAtMost(5); speaker = "TIENDA"; dialogue = "Compras un dulce de fresa. Te queda una sensación agradable." } else dialogue = "Te faltan monedas para comprar algo." }
+                            "plant" -> { speaker = "NARRACIÓN"; dialogue = "Riegas las plantas del parque. Entre las hojas encuentras un pequeño botón con el escudo del instituto."; addClue("Botón con el escudo escolar"); addItem("Botón escolar") }
+                            "room" -> { speaker = "NARRACIÓN"; dialogue = "Revisas la sala. En una estantería hay un álbum de fotos y una llave pequeña."; addClue("La llave de la estantería"); addItem("Llave pequeña") }
                             "rest" -> { energy = (energy + 2).coerceAtMost(5); speaker = "NARRACIÓN"; dialogue = "Te tomas un descanso. Recuperas energía y observas el lugar con más calma." }
                             "snack" -> { if (coins >= 3) { coins -= 3; energy = (energy + 1).coerceAtMost(5); dialogue = "Compras un dulce. Está buenísimo. Recuperas un poco de energía." } else dialogue = "No tienes suficientes monedas." }
                             else -> { speaker = "NARRACIÓN"; dialogue = "Miras alrededor con atención. No tienes que apresurarte: puedes volver cuando quieras."; }
@@ -183,12 +191,14 @@ private fun WorldScreen(
             BottomTab("Personas", "♡", onPeople); BottomTab("Mochila", "🎒", onBag); BottomTab("Diario", "📖", onJournal)
         }
         when (place) {
-            GamePlace.BEDROOM -> Row(Modifier.fillMaxWidth().background(Color(0xFFF0E5F0)).padding(7.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) { MiniAction("Mirar foto", "photo", onAction); MiniAction("Revisar móvil", "phone", onAction) }
-            GamePlace.BATHROOM -> Row(Modifier.fillMaxWidth().background(Color(0xFFF0E5F0)).padding(7.dp)) { MiniAction("Mirarte al espejo", "mirror", onAction) }
-            GamePlace.KITCHEN -> Row(Modifier.fillMaxWidth().background(Color(0xFFF0E5F0)).padding(7.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) { MiniAction("Hablar con mamá", "mom", onAction); MiniAction("Hablar con Lucía", "sister", onAction); MiniAction("Tomar algo", "snack", onAction) }
-            GamePlace.SCHOOL -> Row(Modifier.fillMaxWidth().background(Color(0xFFF0E5F0)).padding(7.dp)) { MiniAction("Entrar a clase", "class", onAction); MiniAction("Buscar a Maya", "maya", onAction) }
-            GamePlace.STREET, GamePlace.PARK -> Row(Modifier.fillMaxWidth().background(Color(0xFFF0E5F0)).padding(7.dp)) { MiniAction("Buscar a Maya", "maya", onAction); MiniAction("Descansar", "rest", onAction) }
-            else -> Unit
+            GamePlace.BEDROOM -> ActionStrip { MiniAction("Mirar foto", "photo", onAction); MiniAction("Revisar móvil", "phone", onAction); MiniAction("Ordenar escritorio", "look", onAction) }
+            GamePlace.BATHROOM -> ActionStrip { MiniAction("Mirarte al espejo", "mirror", onAction); MiniAction("Lavarte la cara", "rest", onAction) }
+            GamePlace.KITCHEN -> ActionStrip { MiniAction("Hablar con mamá", "mom", onAction); MiniAction("Hablar con Lucía", "sister", onAction); MiniAction("Tomar algo", "snack", onAction) }
+            GamePlace.LIVING -> ActionStrip { MiniAction("Revisar estantería", "room", onAction); MiniAction("Descansar", "rest", onAction) }
+            GamePlace.STREET -> ActionStrip { MiniAction("Visitar tienda", "shop", onAction); MiniAction("Buscar a Maya", "maya", onAction); MiniAction("Hablar con Noah", "noah", onAction) }
+            GamePlace.SCHOOL -> ActionStrip { MiniAction("Entrar a clase", "class", onAction); MiniAction("Buscar a Maya", "maya", onAction); MiniAction("Tablón", "notice", onAction); MiniAction("Hablar con Sora", "sora", onAction) }
+            GamePlace.LIBRARY -> ActionStrip { MiniAction("Buscar libreta azul", "bluebook", onAction); MiniAction("Hablar con Iris", "iris", onAction) }
+            GamePlace.PARK -> ActionStrip { MiniAction("Cuidar plantas", "plant", onAction); MiniAction("Hablar con Noah", "noah", onAction); MiniAction("Descansar", "rest", onAction) }
         }
     }
 }
@@ -238,7 +248,7 @@ private fun CharacterArt(person: Person, outfit: Int, modifier: Modifier = Modif
         drawOval(Color(0x22342D46), Offset(cx - head * 1.2f, size.height * .82f), Size(head * 2.4f, size.height * .12f))
         drawRoundRect(person.clothes, Offset(cx - head * 1.05f, cy + head * .72f), Size(head * 2.1f, size.height * .48f), androidx.compose.ui.geometry.CornerRadius(head * .55f))
         drawCircle(person.hair, head * 1.03f, Offset(cx, cy - head * .10f))
-        drawCircle(Color(0xFFFFDCCB), head * .83f, Offset(cx, cy))
+        drawCircle(person.skin, head * .83f, Offset(cx, cy))
         drawArc(person.hair, 180f, 180f, false, Offset(cx - head * .84f, cy - head * .76f), Size(head * 1.68f, head * 1.05f))
         drawCircle(person.hair, head * .23f, Offset(cx - head * .72f, cy + head * .18f))
         drawCircle(person.hair, head * .23f, Offset(cx + head * .72f, cy + head * .18f))
@@ -319,6 +329,11 @@ private fun SmallAction(label: String, icon: String, onClick: () -> Unit) {
     Column(Modifier.width(76.dp).background(Color(0xFF51465F), RoundedCornerShape(10.dp)).clickable { onClick() }.padding(vertical = 7.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Text(icon, fontSize = 15.sp); Text(label, color = Cream, fontSize = 9.sp, textAlign = TextAlign.Center)
     }
+}
+
+@Composable
+private fun ActionStrip(content: @Composable RowScope.() -> Unit) {
+    Row(Modifier.fillMaxWidth().background(Color(0xFFF0E5F0)).padding(7.dp), horizontalArrangement = Arrangement.spacedBy(5.dp), content = content)
 }
 
 @Composable
