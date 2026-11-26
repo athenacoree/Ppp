@@ -10,6 +10,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -102,7 +104,7 @@ private fun MindHouseGame(context: Context) {
                             "mirror" -> { speaker = "ALEX"; dialogue = "Te miras fijamente. Ese rostro no es el tuyo. «Diablo... pero qué cambio». Te cubres con una toalla y respiras hondo."; addClue("El rostro del espejo"); addItem("Foto familiar") }
                             "photo" -> { speaker = "NARRACIÓN"; dialogue = "En la foto aparecen Elena, Lucía y Alex. Detrás hay una fecha escrita: hace tres meses."; addClue("Foto familiar con una fecha"); addItem("Foto familiar") }
                             "phone" -> { speaker = "NARRACIÓN"; dialogue = "El teléfono pide un patrón. En la pantalla bloqueada hay varios mensajes sin leer y una notificación: «No vuelvas a ese lugar»."; addClue("Mensaje: No vuelvas a ese lugar"); addItem("Teléfono bloqueado") }
-                            "mom" -> { speaker = "ELENA"; dialogue = "Cariño, tienes mala cara. ¿Te encuentras bien? Si necesitas quedarte en casa, dímelo."; trust += 1; addJournal("Elena se preocupa por ti.") }
+                            "mom" -> { speaker = "ELENA"; dialogue = "Cariño, tienes mala cara. ¿Te encuentras bien? Si necesitas quedarte en casa, dímelo."; if (place.name + ":" + action !in explored) trust += 1; addJournal("Elena se preocupa por ti.") }
                             "sister" -> { speaker = "LUCÍA"; dialogue = "¿Qué te pasa hoy? Estás rarísimo. Si quieres hablar, estoy en mi cuarto... pero no toques mis cosas."; trust += 1; addJournal("Lucía nota que algo ha cambiado.") }
                             "maya" -> { speaker = "MAYA"; dialogue = "No esperaba verte aquí, Alex. Si de verdad no recuerdas nada, busca la libreta azul. Y no confíes en la primera versión que te cuenten."; addClue("Maya menciona una libreta azul"); trust += 1 }
                             "class" -> { speaker = "PROFESORA"; dialogue = "Llegas justo a tiempo. Puedes sentarte, revisar el tablón o hablar con tus compañeros. No todo en el instituto gira alrededor de las clases."; addJournal("El instituto ofrece nuevas pistas y amistades.") }
@@ -229,10 +231,49 @@ private fun SceneArt(place: GamePlace, outfit: Int, modifier: Modifier = Modifie
                 drawRoundRect(Color(0xFFFFF7F0), Offset(w * .08f, h * .14f), Size(w * .28f, h * .28f), androidx.compose.ui.geometry.CornerRadius(18f))
                 drawLine(Color(0xFFB8A6C4), Offset(w * .22f, h * .14f), Offset(w * .22f, h * .42f), 4f)
                 drawLine(Color(0xFFB8A6C4), Offset(w * .08f, h * .28f), Offset(w * .36f, h * .28f), 4f)
-                drawRoundRect(Color(0xFFB99EC5), Offset(w * .52f, h * .55f), Size(w * .38f, h * .23f), androidx.compose.ui.geometry.CornerRadius(22f))
-                drawRoundRect(Color(0xFFFFF7F0), Offset(w * .54f, h * .51f), Size(w * .34f, h * .10f), androidx.compose.ui.geometry.CornerRadius(18f))
-                if (place == GamePlace.BATHROOM) {
-                    drawRoundRect(Color(0xFF9FC9C5), Offset(w * .60f, h * .16f), Size(w * .22f, h * .32f), androidx.compose.ui.geometry.CornerRadius(15f), style = Stroke(5f))
+                when (place) {
+                    GamePlace.BEDROOM -> {
+                        drawRoundRect(Color(0xFFB99EC5), Offset(w * .43f, h * .56f), Size(w * .48f, h * .22f), androidx.compose.ui.geometry.CornerRadius(22f))
+                        drawRoundRect(Color(0xFFFFF7F0), Offset(w * .46f, h * .52f), Size(w * .19f, h * .10f), androidx.compose.ui.geometry.CornerRadius(15f))
+                        drawRoundRect(Color(0xFFF0B9CC), Offset(w * .65f, h * .57f), Size(w * .23f, h * .17f), androidx.compose.ui.geometry.CornerRadius(12f))
+                        drawRoundRect(Color(0xFFB58CA8), Offset(w * .09f, h * .53f), Size(w * .18f, h * .25f), androidx.compose.ui.geometry.CornerRadius(8f))
+                        drawCircle(Color(0xFFFFD77A), w * .018f, Offset(w * .24f, h * .58f))
+                    }
+                    GamePlace.BATHROOM -> {
+                        drawRoundRect(Color(0xFF9FC9C5), Offset(w * .60f, h * .16f), Size(w * .22f, h * .32f), androidx.compose.ui.geometry.CornerRadius(15f), style = Stroke(5f))
+                        drawRoundRect(Color(0xFFFFF8F3), Offset(w * .48f, h * .57f), Size(w * .36f, h * .12f), androidx.compose.ui.geometry.CornerRadius(18f))
+                        drawRoundRect(Color(0xFF9FC9C5), Offset(w * .56f, h * .67f), Size(w * .20f, h * .10f), androidx.compose.ui.geometry.CornerRadius(12f))
+                        drawCircle(Color(0xFFFFD77A), w * .018f, Offset(w * .66f, h * .62f))
+                    }
+                    GamePlace.KITCHEN -> {
+                        drawRoundRect(Color(0xFFC69A83), Offset(w * .48f, h * .51f), Size(w * .42f, h * .11f), androidx.compose.ui.geometry.CornerRadius(8f))
+                        drawRect(Color(0xFF9A755D), Offset(w * .51f, h * .62f), Size(w * .035f, h * .16f))
+                        drawRect(Color(0xFF9A755D), Offset(w * .83f, h * .62f), Size(w * .035f, h * .16f))
+                        drawRoundRect(Color(0xFFFFF8F3), Offset(w * .53f, h * .24f), Size(w * .33f, h * .19f), androidx.compose.ui.geometry.CornerRadius(8f))
+                        drawCircle(Color(0xFFF3B9C9), w * .035f, Offset(w * .68f, h * .23f))
+                    }
+                    GamePlace.LIVING -> {
+                        drawRoundRect(Color(0xFFB99EC5), Offset(w * .48f, h * .55f), Size(w * .43f, h * .23f), androidx.compose.ui.geometry.CornerRadius(22f))
+                        drawRoundRect(Color(0xFFFFF7F0), Offset(w * .51f, h * .51f), Size(w * .37f, h * .10f), androidx.compose.ui.geometry.CornerRadius(18f))
+                        drawRoundRect(Color(0xFFB58CA8), Offset(w * .10f, h * .55f), Size(w * .13f, h * .23f), androidx.compose.ui.geometry.CornerRadius(8f))
+                    }
+                    GamePlace.SCHOOL -> {
+                        drawRoundRect(Color(0xFF7E789C), Offset(w * .48f, h * .14f), Size(w * .40f, h * .25f), androidx.compose.ui.geometry.CornerRadius(10f))
+                        drawLine(Color(0xFFEFE8F5), Offset(w * .53f, h * .22f), Offset(w * .80f, h * .22f), 3f)
+                        drawRoundRect(Color(0xFFC69A83), Offset(w * .48f, h * .57f), Size(w * .38f, h * .10f), androidx.compose.ui.geometry.CornerRadius(8f))
+                        drawRect(Color(0xFF9A755D), Offset(w * .52f, h * .67f), Size(w * .025f, h * .11f))
+                        drawRect(Color(0xFF9A755D), Offset(w * .80f, h * .67f), Size(w * .025f, h * .11f))
+                    }
+                    GamePlace.LIBRARY -> {
+                        for (row in 0..2) {
+                            drawRoundRect(Color(0xFFB58CA8), Offset(w * .52f, h * (.18f + row * .11f)), Size(w * .34f, h * .075f), androidx.compose.ui.geometry.CornerRadius(5f))
+                            for (book in 0..4) {
+                                val bx = w * (.54f + book * .06f)
+                                drawRect(listOf(Color(0xFFE7A5BD), Color(0xFF9E8ACB), Color(0xFF8FA99B), Color(0xFFE7C78E), Color(0xFF8198B9))[book], Offset(bx, h * (.19f + row * .11f)), Size(w * .045f, h * .065f))
+                            }
+                        }
+                    }
+                    else -> Unit
                 }
             }
         }
@@ -360,7 +401,7 @@ private fun SmallAction(label: String, icon: String, onClick: () -> Unit) {
 
 @Composable
 private fun ActionStrip(content: @Composable RowScope.() -> Unit) {
-    Row(Modifier.fillMaxWidth().background(Color(0xFFF0E5F0)).padding(7.dp), horizontalArrangement = Arrangement.spacedBy(5.dp), content = content)
+    Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).background(Color(0xFFF0E5F0)).padding(7.dp), horizontalArrangement = Arrangement.spacedBy(5.dp), content = content)
 }
 
 @Composable
