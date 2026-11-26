@@ -75,6 +75,20 @@ private fun MindHouseGame(context: Context) {
     var speaker by remember { mutableStateOf("NARRACIÓN") }
     var clueCount by remember { mutableIntStateOf(save.getInt("clues", 0)) }
     var trust by remember { mutableIntStateOf(save.getInt("trust", 0)) }
+    var relationships by remember { mutableStateOf(mapOf(
+        "elena" to save.getInt("rel_elena", 0), "lucia" to save.getInt("rel_lucia", 0),
+        "maya" to save.getInt("rel_maya", 0), "noah" to save.getInt("rel_noah", 0),
+        "sora" to save.getInt("rel_sora", 0), "iris" to save.getInt("rel_iris", 0),
+        "vera" to save.getInt("rel_vera", 0)
+    )) }
+    fun buildRelationship(id: String, action: String) {
+        val key = "relationship:$id:$action"
+        if (key !in explored) {
+            relationships = relationships + (id to ((relationships[id] ?: 0) + 1).coerceAtMost(10))
+            trust += 1
+            explored = explored + key
+        }
+    }
     var explored by remember { mutableStateOf<Set<String>>(save.getStringSet("explored", emptySet()) ?: emptySet()) }
     var inventory by remember { mutableStateOf<Set<String>>(save.getStringSet("inventory", setOf("Teléfono bloqueado")) ?: setOf("Teléfono bloqueado")) }
     var journal by remember { mutableStateOf<Set<String>>(save.getStringSet("journal", setOf("No recuerdas quién eres.")) ?: setOf("No recuerdas quién eres.")) }
@@ -85,7 +99,11 @@ private fun MindHouseGame(context: Context) {
     LaunchedEffect(day, hour, outfit, energy, coins, clueCount, trust, explored.hashCode(), inventory.hashCode(), journal.hashCode()) {
         save.edit().putInt("day", day).putInt("hour", hour).putInt("outfit", outfit)
             .putInt("energy", energy).putInt("coins", coins).putInt("clues", clueCount)
-            .putInt("trust", trust).putStringSet("explored", explored.toSet())
+            .putInt("trust", trust).putInt("rel_elena", relationships["elena"] ?: 0)
+            .putInt("rel_lucia", relationships["lucia"] ?: 0).putInt("rel_maya", relationships["maya"] ?: 0)
+            .putInt("rel_noah", relationships["noah"] ?: 0).putInt("rel_sora", relationships["sora"] ?: 0)
+            .putInt("rel_iris", relationships["iris"] ?: 0).putInt("rel_vera", relationships["vera"] ?: 0)
+            .putStringSet("explored", explored.toSet())
             .putStringSet("inventory", inventory.toSet()).putStringSet("journal", journal.toSet()).apply()
     }
 
@@ -96,7 +114,7 @@ private fun MindHouseGame(context: Context) {
                 "wardrobe" -> Wardrobe(outfit, onChoose = { outfit = it }, onBack = { page = "world" })
                 "journal" -> CollectionScreen("DIARIO Y PISTAS", journal.toList(), "Cada pista que descubras se guarda aquí.", { page = "world" })
                 "bag" -> CollectionScreen("MOCHILA", inventory.toList(), "Objetos que llevas contigo.", { page = "world" })
-                "people" -> PeopleScreen { page = "world" }
+                "people" -> PeopleScreen(relationships) { page = "world" }
                 else -> WorldScreen(
                     place = place, day = day, hour = hour, outfit = outfit, energy = energy,
                     coins = coins, clueCount = clueCount, speaker = speaker, dialogue = dialogue,
@@ -106,15 +124,18 @@ private fun MindHouseGame(context: Context) {
                             "mirror" -> { speaker = "ALEX"; dialogue = "Te miras fijamente. Ese rostro no es el tuyo. «Diablo... pero qué cambio». Te cubres con una toalla y respiras hondo."; addClue("El rostro del espejo"); addItem("Foto familiar") }
                             "photo" -> { speaker = "NARRACIÓN"; dialogue = "En la foto aparecen Elena, Lucía y Alex. Detrás hay una fecha escrita: hace tres meses."; addClue("Foto familiar con una fecha"); addItem("Foto familiar") }
                             "phone" -> { speaker = "NARRACIÓN"; dialogue = "El teléfono pide un patrón. En la pantalla bloqueada hay varios mensajes sin leer y una notificación: «No vuelvas a ese lugar»."; addClue("Mensaje: No vuelvas a ese lugar"); addItem("Teléfono bloqueado") }
-                            "mom" -> { speaker = "ELENA"; dialogue = "Cariño, tienes mala cara. ¿Te encuentras bien? Si necesitas quedarte en casa, dímelo."; if (place.name + ":" + action !in explored) trust += 1; addJournal("Elena se preocupa por ti.") }
-                            "sister" -> { speaker = "LUCÍA"; dialogue = "¿Qué te pasa hoy? Estás rarísimo. Si quieres hablar, estoy en mi cuarto... pero no toques mis cosas."; trust += 1; addJournal("Lucía nota que algo ha cambiado.") }
-                            "maya" -> { speaker = "MAYA"; dialogue = "No esperaba verte aquí, Alex. Si de verdad no recuerdas nada, busca la libreta azul. Y no confíes en la primera versión que te cuenten."; addClue("Maya menciona una libreta azul"); trust += 1 }
+                            "mom" -> { speaker = "ELENA"; dialogue = "Cariño, tienes mala cara. ¿Te encuentras bien? Si necesitas quedarte en casa, dímelo."; buildRelationship("elena", action); addJournal("Elena se preocupa por ti.") }
+                            "sister" -> { speaker = "LUCÍA"; dialogue = "¿Qué te pasa hoy? Estás rarísimo. Si quieres hablar, estoy en mi cuarto... pero no toques mis cosas."; buildRelationship("lucia", action); addJournal("Lucía nota que algo ha cambiado.") }
+                            "maya" -> { speaker = "MAYA"; dialogue = "No esperaba verte aquí, Alex. Si de verdad no recuerdas nada, busca la libreta azul. Y no confíes en la primera versión que te cuenten."; addClue("Maya menciona una libreta azul"); buildRelationship("maya", action) }
                             "class" -> { speaker = "PROFESORA"; dialogue = "Llegas justo a tiempo. Puedes sentarte, revisar el tablón o hablar con tus compañeros. No todo en el instituto gira alrededor de las clases."; addJournal("El instituto ofrece nuevas pistas y amistades.") }
                             "bluebook" -> { speaker = "NARRACIÓN"; dialogue = "Encuentras una libreta azul detrás de unos libros. Hay una página arrancada y una frase: «La habitación 204 no existe en los planos»."; addClue("Libreta azul: habitación 204"); addItem("Libreta azul") }
-                            "sora" -> { speaker = "SORA"; dialogue = "¡Hola! Soy Sora. Si te gustan los dibujos, algún día te enseño mi cuaderno. Aunque... ¿por qué estás mirando tanto esa foto?"; trust += 1; addJournal("Sora quiere enseñarte su cuaderno.") }
-                            "noah" -> { speaker = "NOAH"; dialogue = "¿Te gusta la fotografía? Ayer encontré una foto vieja cerca del gimnasio. Quizá sea tuya."; addClue("Noah encontró una fotografía antigua"); addItem("Pista fotográfica") }
-                            "iris" -> { speaker = "IRIS"; dialogue = "Los archivos antiguos están al fondo. Puedes leerlos, pero algunas cajas llevan años cerradas."; addJournal("Iris puede ayudarte a consultar archivos.") }
+                            "sora" -> { speaker = "SORA"; dialogue = "¡Hola! Soy Sora. Si te gustan los dibujos, algún día te enseño mi cuaderno. Aunque... ¿por qué estás mirando tanto esa foto?"; buildRelationship("sora", action); addJournal("Sora quiere enseñarte su cuaderno.") }
+                            "noah" -> { speaker = "NOAH"; dialogue = "¿Te gusta la fotografía? Ayer encontré una foto vieja cerca del gimnasio. Quizá sea tuya."; addClue("Noah encontró una fotografía antigua"); addItem("Pista fotográfica"); buildRelationship("noah", action) }
+                            "iris" -> { speaker = "IRIS"; dialogue = "Los archivos antiguos están al fondo. Puedes leerlos, pero algunas cajas llevan años cerradas."; addJournal("Iris puede ayudarte a consultar archivos."); buildRelationship("iris", action) }
                             "notice" -> { speaker = "NARRACIÓN"; dialogue = "El tablón anuncia el club de arte, el festival escolar y una excursión. Puedes apuntarte cuando quieras."; addJournal("Actividades: club de arte, festival y excursión.") }
+                            "art" -> { if (energy > 0) { energy -= 1; addItem("Dibujo de Alex"); addJournal("Pasaste un rato dibujando en el club de arte."); speaker = "CLUB DE ARTE"; dialogue = "Te sientas junto a la ventana y dibujas sin pensar en el misterio. Sora sonríe al ver tu trabajo."; buildRelationship("sora", action) } else dialogue = "Estás demasiado cansado para dibujar ahora." }
+                            "photoWalk" -> { if (energy > 0) { energy -= 1; coins += 2; addItem("Fotografía del barrio"); addJournal("Saliste a fotografiar rincones del barrio y ganaste dos monedas vendiendo una copia."); speaker = "NOAH"; dialogue = "Noah te enseña a encuadrar la luz. Por un momento, solo importa conseguir una buena foto."; buildRelationship("noah", action) } else dialogue = "Necesitas descansar antes de salir a tomar fotos." }
+                            "music" -> { if (energy > 0) { energy -= 1; addJournal("Practicaste música para despejar la mente."); speaker = "ALEX"; dialogue = "Encuentras una guitarra vieja y practicas unos acordes. No recuerdas haber aprendido, pero tus manos sí."; } else dialogue = "No tienes energía para practicar ahora." }
                             "shop" -> { if (coins >= 5) { coins -= 5; addItem("Dulce de fresa"); energy = (energy + 1).coerceAtMost(5); speaker = "TIENDA"; dialogue = "Compras un dulce de fresa. Te queda una sensación agradable." } else dialogue = "Te faltan monedas para comprar algo." }
                             "plant" -> { speaker = "NARRACIÓN"; dialogue = "Riegas las plantas del parque. Entre las hojas encuentras un pequeño botón con el escudo del instituto."; addClue("Botón con el escudo escolar"); addItem("Botón escolar") }
                             "room" -> { speaker = "NARRACIÓN"; dialogue = "Revisas la sala. En una estantería hay un álbum de fotos y una llave pequeña."; addClue("La llave de la estantería"); addItem("Llave pequeña") }
@@ -199,10 +220,10 @@ private fun WorldScreen(
             GamePlace.BATHROOM -> ActionStrip { MiniAction("Mirarte al espejo", "mirror", onAction); MiniAction("Lavarte la cara", "rest", onAction) }
             GamePlace.KITCHEN -> ActionStrip { MiniAction("Hablar con mamá", "mom", onAction); MiniAction("Hablar con Lucía", "sister", onAction); MiniAction("Tomar algo", "snack", onAction) }
             GamePlace.LIVING -> ActionStrip { MiniAction("Revisar estantería", "room", onAction); MiniAction("Descansar", "rest", onAction) }
-            GamePlace.STREET -> ActionStrip { MiniAction("Visitar tienda", "shop", onAction); MiniAction("Buscar a Maya", "maya", onAction); MiniAction("Hablar con Noah", "noah", onAction) }
-            GamePlace.SCHOOL -> ActionStrip { MiniAction("Entrar a clase", "class", onAction); MiniAction("Buscar a Maya", "maya", onAction); MiniAction("Tablón", "notice", onAction); MiniAction("Hablar con Sora", "sora", onAction) }
+            GamePlace.STREET -> ActionStrip { MiniAction("Visitar tienda", "shop", onAction); MiniAction("Buscar a Maya", "maya", onAction); MiniAction("Hablar con Noah", "noah", onAction); MiniAction("Paseo fotográfico", "photoWalk", onAction) }
+            GamePlace.SCHOOL -> ActionStrip { MiniAction("Entrar a clase", "class", onAction); MiniAction("Buscar a Maya", "maya", onAction); MiniAction("Tablón", "notice", onAction); MiniAction("Hablar con Sora", "sora", onAction); MiniAction("Club de arte", "art", onAction) }
             GamePlace.LIBRARY -> ActionStrip { MiniAction("Buscar libreta azul", "bluebook", onAction); MiniAction("Hablar con Iris", "iris", onAction) }
-            GamePlace.PARK -> ActionStrip { MiniAction("Cuidar plantas", "plant", onAction); MiniAction("Hablar con Noah", "noah", onAction); MiniAction("Descansar", "rest", onAction) }
+            GamePlace.PARK -> ActionStrip { MiniAction("Cuidar plantas", "plant", onAction); MiniAction("Hablar con Noah", "noah", onAction); MiniAction("Practicar música", "music", onAction); MiniAction("Descansar", "rest", onAction) }
         }
     }
 }
@@ -356,7 +377,7 @@ private fun Wardrobe(outfit: Int, onChoose: (Int) -> Unit, onBack: () -> Unit) {
 }
 
 @Composable
-private fun PeopleScreen(onBack: () -> Unit) {
+private fun PeopleScreen(relationships: Map<String, Int>, onBack: () -> Unit) {
     Column(Modifier.fillMaxSize().background(Soft).padding(16.dp)) {
         Text("PERSONAJES", color = Ink, fontSize = 24.sp, fontWeight = FontWeight.Black)
         Text("Conócelos poco a poco. Cada uno tiene sus propios secretos.", color = Ink, fontSize = 12.sp)
@@ -369,6 +390,10 @@ private fun PeopleScreen(onBack: () -> Unit) {
                         Text(p.name, color = Ink, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                         Text(p.role, color = Color(0xFF9C759B), fontSize = 11.sp)
                         Text(p.note, color = Ink, fontSize = 11.sp)
+                        val id = Cast.members.getOrNull(i)?.id ?: ""
+                        val level = relationships[id] ?: 0
+                        Text("♡ Vínculo: $level/10", color = Color(0xFF9C759B), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                        LinearProgressIndicator(progress = { level / 10f }, modifier = Modifier.fillMaxWidth().padding(top = 4.dp), color = Pink, trackColor = Soft)
                     }
                 }
             }
